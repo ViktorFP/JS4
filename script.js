@@ -1,17 +1,48 @@
 window.FuncKit=(function(){
-	var arrayPararrahps=[];
+	var arrayParagrahps=[];
+	var dataObject;
 	
-	function docName(){
-		var name="Document Name";
+	function data(){
+		var xhr = new XMLHttpRequest();
+		xhr.open('GET', 'http://localhost:3000/docs.svc/getDocumentsList');
+		xhr.onreadystatechange = function() {
+			if (xhr.readyState == 4) {
+				if(xhr.status == 200) {
+					dataObject=JSON.parse(xhr.responseText);
+					document.getElementsByClassName("doc_name")[0].innerHTML=dataObject[0].name;
+					var body='';
+					for(var i=0;dataObject[i];i++){
+						var obj=dataObject[i];
+						console.log(obj);
+						body+='<div id="'+obj.id+'" class=doc_name">'+obj.name+'</div><ul>';
+						
+						var fragments=obj.fragments;
+						for(var j=0;j<fragments.length;j++){
+							var name=fragments[j].name;
+							body+='<li id="'+i+'_'+j+'"><a href=#'+name+'">'+name+'</a></li> ';
+						}
+						body+='</ul>'; 
+					}
+					var contentList=document.getElementsByClassName('content_list');
+					contentList[0].innerHTML =body;
+					/* 	var name="Document Name";
+					docName(name); */
+				}
+			}
+		};
+		xhr.send(null);
+	}
+	
+	/* function docName(name){
 		var arrayElements=document.getElementsByClassName("doc_name");	
 		for(var i=0;i<arrayElements.length;i++){
-			arrayElements[i].innerHTML = name;
+		arrayElements[i].innerHTML = name;
 		}
-	}
+	} */
 	
 	function hide(field){
 		var currentClass=field.getAttribute("class");
-		var current=arrayPararrahps[currentClass];
+		var current=arrayParagrahps[currentClass];
 		if(current){
 			alert(current);
 			}else{
@@ -36,6 +67,7 @@ window.FuncKit=(function(){
 		}
 	}
 	
-	return {setDocName:docName,
+	return {
+		getData:data,
 	hideText:hide};
 })();
