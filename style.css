@@ -1,0 +1,107 @@
+html, body{
+	display:table;
+	width:100%;
+	height:100%;
+	margin:0;
+	color:#fff;
+	font-family: Arial, Verdana, Helvetica, sans-serif;
+	background: #E3F1F9
+}
+
+.content{	
+	width:1200px;
+	margin:5px auto;
+	color:#6DA6C6
+}
+.header{
+	box-sizing:border-box;
+	display:table;
+	border:solid 3px #92C1D7;
+	min-width:100%
+}
+
+input[type="button"]{ 
+	margin:5px;
+	box-sizing:border-box;
+	border:1px solid #aaa;		
+	color:#3c3c3c;
+	font-size:18.7px;
+	height:35px;
+	background-color:#DBEEF9;
+	white-space:nowrap;
+	overflow:hidden;
+	cursor:pointer
+}
+
+
+.doc_name{
+	margin:0 30px
+}
+
+.header .doc_name{
+	display:table-cell;
+	vertical-align:middle;
+	font-size:24px
+}
+
+.menu_colomn{
+	display:table-cell;
+	padding-bottom:10px;
+	background-color:#CEDBE2
+}
+
+ul{
+	margin:0;
+padding-left:25%}
+
+li {
+    list-style-type: none; 
+	margin:3px 0
+}
+
+.table_content{
+	display:table-cell;
+	padding:10px;
+	text-align: center;
+	width:60%;	
+	font-size:18px
+}
+
+.body{
+	margin:5px auto;
+	width:100%;
+	display:table;
+	border-spacing:5px 0
+}
+
+.content_view{
+	display:table-cell;
+	background-color:#D1EAF9;
+	width:75%;
+	padding:0 5px
+}
+
+.paragraph{
+	display:table;
+	margin:5px 0;
+	border:solid 2px;
+	padding:5px;
+	text-align: center
+}
+
+.paragraphName{
+	display:table-cell;
+	width:100%;
+	margin:0;	
+}
+
+.hide input[type="button"]{
+	margin:0;
+}
+
+.paragraphText{
+	margin:5px 0;
+	border:solid 2px #B1C7D3;
+	padding:5px;
+	height:100%
+}
