@@ -1,10 +1,11 @@
 window.FuncKit=(function(){
+	var xhr = new XMLHttpRequest();
+	var url='http://localhost:3000/docs.svc';
 	var arrayParagrahps=[];
 	var dataObject;
 	
 	function data(){
-		var xhr = new XMLHttpRequest();
-		xhr.open('GET', 'http://localhost:3000/docs.svc/getDocumentsList');
+		xhr.open('GET', url+'/getDocumentsList');
 		xhr.onreadystatechange = function() {
 			if (xhr.readyState == 4) {
 				if(xhr.status == 200) {
@@ -14,7 +15,6 @@ window.FuncKit=(function(){
 					for(var i=0;dataObject[i];i++){
 						//create block for document name
 						var obj=dataObject[i];
-						console.log(obj);/////////////////////
 						body+='<div id="'+obj.id+'" class=doc_name">'+(i+1)+' '+obj.name+'</div><ul>';
 						//create fragments list
 						var fragments=obj.fragments;
@@ -37,44 +37,59 @@ window.FuncKit=(function(){
 					}
 					var contentList=document.getElementsByClassName('content_list');
 					contentList[0].innerHTML =body;
-					/* 	var name="Document Name";
-					docName(name); */
 				}
 			}
 		};
-		xhr.send(null);
+		xhr.send();
 	}
-	
-	/* function docName(name){
-		var arrayElements=document.getElementsByClassName("doc_name");	
-		for(var i=0;i<arrayElements.length;i++){
-		arrayElements[i].innerHTML = name;
-		}
-	} */
 	
 	function hide(field){
 		var currentClass=field.getAttribute("class");
 		var current=arrayParagrahps[currentClass];
+		var objData;
 		if(current){
-			alert(current);
+			changeView(currentClass,current);
 			}else{
-			var arrayElements=document.getElementsByClassName(currentClass);
-			for(var i=0;i<arrayElements.length;i++){
-				changer(arrayElements[i]);
-			} 
-		}
-		
+			var ids=currentClass.split(/_/);
+			xhr.open('GET', url+'/getDocumentFragment?docId='+ids[0]+'&fragmentId='+ids[1]);
+			xhr.onreadystatechange = function() {
+				
+				if (xhr.readyState == 4) {
+					if(xhr.status == 200) {
+						objData={flag:false,data:JSON.parse(xhr.responseText)};
+						arrayParagrahps[currentClass]=objData; 
+						changeView(currentClass,objData);
+					}
+				}
+			};
+			xhr.send();
+		}		
 	}
 	
-	function changer(element){
+	function changeView(currentClass,objData){
+		var arrayElements=document.getElementsByClassName(currentClass);
+		for(var i=0;i<arrayElements.length;i++){
+			changer(arrayElements[i],objData);
+		}  
+		objData.flag=!objData.flag;
+	}
+	
+	function changer(element,obj){
 		var tag=element.tagName;
+		var flag=obj.flag;
 		switch(tag){
 			case 'INPUT':
-			element.setAttribute('value', '	\u21D3');
+			if(flag){
+			element.setAttribute('value', '\u21D3');}else{element.setAttribute('value', '\u21D1');}
 			break;
 			case 'DIV':
-			element.innerHTML ='NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText NewText ';
-			element.setAttribute("style", "margin:5px 0; border:solid 2px #B1C7D3; padding:5px; height:100%"); 			
+			if(flag){
+				element.innerHTML ="";
+				element.setAttribute("style", "");
+				}else{
+				element.innerHTML =obj.data.content;
+				element.setAttribute("style", "margin:5px 0; border:solid 2px #B1C7D3; padding:5px; height:100%");
+			} 			
 			break;
 		}
 	}
