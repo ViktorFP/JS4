@@ -4,6 +4,7 @@ window.FuncKit=(function(){
 	var arrayParagrahps=[];
 	var dataObject;
 	var emptyTitle='(No name)';
+	var fontSizeFragment=16;
 	
 	function data(){
 		xhr.open('GET', url+'/getDocumentsList');
@@ -11,7 +12,6 @@ window.FuncKit=(function(){
 			if (xhr.readyState == 4) {
 				if(xhr.status == 200) {
 					dataObject=JSON.parse(xhr.responseText);
-					document.getElementsByClassName('doc_name')[0].innerHTML=dataObject[0].name;
 					var body='';
 					for(var i=0;dataObject[i];i++){
 						//create block for document name
@@ -36,10 +36,55 @@ window.FuncKit=(function(){
 	}
 	
 	function getTitle(title){
+		var ref='</a>';
+		var repl='replace';
+		var protocol='http://';
+		if(title.includes(ref)){			
+			if(title.includes(repl) && !title.includes(protocol)){
+				var idx=title.indexOf(repl)+9;
+				var end=title.slice(idx);
+				title=title.substring(0,idx)+protocol+end;
+			}		
+			title=title.substring(0,title.length-4);
+			title+='reference'+ref;
+		}
 		return title===''?title=emptyTitle:title;
 	}
 	
+	function animate(element){
+		var opacity=element.style.opacity;
+		var h,id;
+		if(opacity==='1'){
+			h=100;
+			id = setInterval(frame, 1);
+			function frame() {
+				if (h === 0) {
+					clearInterval(id);
+					element.innerHTML ='';
+					element.removeAttribute('style');
+					} else {
+					h-=2; 
+					element.style.fontSize=fontSizeFragment*h/100+'px';
+					element.style.opacity = h*0.01; 			
+				}
+			}
+			}else{
+			h=0;
+			id = setInterval(frame, 1);
+			function frame() {
+				if (h === 100) {
+					clearInterval(id);
+					} else {
+					h+=2; 
+					element.style.fontSize=fontSizeFragment*h/100+'px';
+					element.style.opacity = h*0.01; 
+				}
+			}
+		} 
+	}
+	
 	function createContext(idDoc){
+		document.getElementsByClassName('doc_name')[0].innerHTML=dataObject[idDoc].name;					
 		//create context					
 		var fragments=dataObject[idDoc].fragments;
 		var fragmentsBlock='';
@@ -91,13 +136,14 @@ window.FuncKit=(function(){
 			element.setAttribute('value', '\u21D3');}else{element.setAttribute('value', '\u21D1');}
 			break;
 			case 'DIV':
-			if(flag){
-				element.innerHTML ='';
-				element.setAttribute('style', '');
+			if(flag){								
+				animate(element);
 				}else{
+				animate(element);				
 				element.innerHTML =obj.data.content;
-				element.setAttribute('style', 'margin:5px 0; border:solid 2px #B1C7D3; padding:5px; height:100%');
-			} 			
+				element.setAttribute('style', 'font-size:'+fontSizeFragment+
+				'px; margin:5px 0; border:solid 2px #B1C7D3; padding:5px; height:100%; opacity:1');
+				} 			
 			break;
 		}
 	}
@@ -105,5 +151,6 @@ window.FuncKit=(function(){
 	return {
 		getData:data,
 		hideText:hide,
-	getContext:createContext};
+		getContext:createContext
+	};
 })();
