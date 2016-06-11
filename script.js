@@ -3,6 +3,7 @@ window.FuncKit=(function(){
 	var url='http://localhost:3000/docs.svc';
 	var arrayParagrahps=[];
 	var dataObject;
+	var emptyTitle='(No name)';
 	
 	function data(){
 		xhr.open('GET', url+'/getDocumentsList');
@@ -10,30 +11,21 @@ window.FuncKit=(function(){
 			if (xhr.readyState == 4) {
 				if(xhr.status == 200) {
 					dataObject=JSON.parse(xhr.responseText);
-					document.getElementsByClassName("doc_name")[0].innerHTML=dataObject[0].name;
+					document.getElementsByClassName('doc_name')[0].innerHTML=dataObject[0].name;
 					var body='';
 					for(var i=0;dataObject[i];i++){
 						//create block for document name
 						var obj=dataObject[i];
-						body+='<div id="'+obj.id+'" class=doc_name">'+(i+1)+' '+obj.name+'</div><ul>';
+						body+='<div id="'+obj.id+'" class=doc_name">'+(i+1)+' '+
+						obj.name+'</div><ul onclick="FuncKit.getContext('+obj.id+')">';
 						//create fragments list
 						var fragments=obj.fragments;
 						for(var j=0;j<fragments.length;j++){
-							var id=i+'_'+j;
-							body+='<li id="'+id+'"><a href="#'+id+'a">'+fragments[j].name+'</a></li> ';							
+							var id=i+'_'+j;							
+							body+='<li id="'+id+'"><a href="#'+id+'a">'+
+							getTitle(fragments[j].name)+'</a></li> ';							
 						}
-						body+='</ul>'; 
-						//create context for first
-						if(i===0){
-							var fragmentsBlock='';
-							for(var k=0;k<fragments.length;k++){							
-								var idF=i+'_'+k;
-								fragmentsBlock+='<div id="'+idF+'a" class="paragraph"><span class="paragraphName">'+
-								fragments[k].name+'</span><span class="hide"><input class="'+idF+
-								'" type="button" value="&#8657;" onclick="FuncKit.hideText(this)"></span></div><div class="'+idF+'"></div>';
-							}
-							document.getElementsByClassName("content_view")[0].innerHTML=fragmentsBlock;							
-						}
+						body+='</ul>'; 						
 					}
 					var contentList=document.getElementsByClassName('content_list');
 					contentList[0].innerHTML =body;
@@ -43,8 +35,25 @@ window.FuncKit=(function(){
 		xhr.send();
 	}
 	
+	function getTitle(title){
+		return title===''?title=emptyTitle:title;
+	}
+	
+	function createContext(idDoc){
+		//create context					
+		var fragments=dataObject[idDoc].fragments;
+		var fragmentsBlock='';
+		for(var k=0;k<fragments.length;k++){							
+			var idF=idDoc+'_'+k;			
+			fragmentsBlock+='<div id="'+idF+'a" class="paragraph"><span class="paragraphName">'+
+			getTitle(fragments[k].name)+'</span><span class="hide"><input class="'+idF+
+			'" type="button" value="&#8657;" onclick="FuncKit.hideText(this)"></span></div><div class="'+idF+'"></div>';
+		}
+		document.getElementsByClassName('content_view')[0].innerHTML=fragmentsBlock;
+	}
+	
 	function hide(field){
-		var currentClass=field.getAttribute("class");
+		var currentClass=field.getAttribute('class');
 		var current=arrayParagrahps[currentClass];
 		var objData;
 		if(current){
@@ -52,8 +61,7 @@ window.FuncKit=(function(){
 			}else{
 			var ids=currentClass.split(/_/);
 			xhr.open('GET', url+'/getDocumentFragment?docId='+ids[0]+'&fragmentId='+ids[1]);
-			xhr.onreadystatechange = function() {
-				
+			xhr.onreadystatechange = function() {				
 				if (xhr.readyState == 4) {
 					if(xhr.status == 200) {
 						objData={flag:false,data:JSON.parse(xhr.responseText)};
@@ -79,16 +87,16 @@ window.FuncKit=(function(){
 		var flag=obj.flag;
 		switch(tag){
 			case 'INPUT':
-			if(flag){
+			if(!flag){
 			element.setAttribute('value', '\u21D3');}else{element.setAttribute('value', '\u21D1');}
 			break;
 			case 'DIV':
 			if(flag){
-				element.innerHTML ="";
-				element.setAttribute("style", "");
+				element.innerHTML ='';
+				element.setAttribute('style', '');
 				}else{
 				element.innerHTML =obj.data.content;
-				element.setAttribute("style", "margin:5px 0; border:solid 2px #B1C7D3; padding:5px; height:100%");
+				element.setAttribute('style', 'margin:5px 0; border:solid 2px #B1C7D3; padding:5px; height:100%');
 			} 			
 			break;
 		}
@@ -96,5 +104,6 @@ window.FuncKit=(function(){
 	
 	return {
 		getData:data,
-	hideText:hide};
+		hideText:hide,
+	getContext:createContext};
 })();
