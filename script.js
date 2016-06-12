@@ -3,9 +3,12 @@ window.FuncKit=(function(){
 	var url='http://localhost:3000/docs.svc';
 	var arrayParagrahps=[];
 	var dataObject;
+	var dataCount=-1;
 	var emptyTitle='(No name)';
 	var fontSizeFragment=16;
-	
+	var nameDoc='doc_name';
+	var newDataClass='data';
+	//------------------------
 	function data(){
 		xhr.open('GET', url+'/getDocumentsList');
 		xhr.onreadystatechange = function() {
@@ -14,33 +17,82 @@ window.FuncKit=(function(){
 					dataObject=JSON.parse(xhr.responseText);
 					var body='';
 					for(var i=0;dataObject[i];i++){
+						dataCount++;
 						//create block for document name
 						var obj=dataObject[i];
-						body+='<div id="'+obj.id+'" class=doc_name">'+(i+1)+' '+
-						obj.name+'</div><ul onclick="FuncKit.getContext('+obj.id+')">';
-						//create fragments list
-						var fragments=obj.fragments;
-						for(var j=0;j<fragments.length;j++){
-							var id=i+'_'+j;							
-							body+='<li id="'+id+'"><a href="#'+id+'a">'+
-							getTitle(fragments[j].name)+'</a></li> ';							
-						}
-						body+='</ul>'; 						
+						body=addDocToList(body,obj,i);						
 					}
 					var contentList=document.getElementsByClassName('content_list');
 					contentList[0].innerHTML =body;
+					//--
+					var headerButtons=document.getElementsByClassName('header');
+					for(var k=0;k<headerButtons.length;k++){
+						headerButtons[k].setAttribute('onclick',
+						't=event.target||event.srcElement; FuncKit.displayDialog(t.id)');
+					}
 				}
 			}
 		};
 		xhr.send();
 	}
 	
+	function addDocToList(body,obj,pos){
+		body+='<div id="'+obj.id+'" class='+nameDoc+'">'+(pos+1)+' '+
+		obj.name+'</div><ul onclick="FuncKit.getContext('+obj.id+')">';
+		//create fragments list
+		var fragments=obj.fragments;
+		for(var j=0;j<fragments.length;j++){
+			var id=pos+'_'+j;							
+			body+='<li id="'+id+'"><a href="#'+id+'a">'+
+			getTitle(fragments[j].name)+'</a></li> ';							
+		}
+		body+='</ul>'; 
+		return body;
+	}
+	
+	function createDialog(idButton){
+		var x = screen.width/2,y = screen.height/2,dWindow;
+		var scrWidth, scrHeight,dHTML;
+		var create=true;		
+		
+		switch(idButton){
+			case 'newDoc':
+			scrWidth=200;
+			scrHeight=150;			
+			x -= scrWidth/2;
+			y -= scrHeight/2;			
+			dHTML='<!DOCTYPE html><html><head>'+
+			'<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">'+
+			'<title>New document</title></head><body><div>New document<div>'+
+			'<input class="'+newDataClass+'" type="text"></div><div><input type="button" value="Create"'+
+			'onclick="window.opener.FuncKit.newDocument(window)">'+
+			'</div></div></body></html>';			
+			break;
+			
+			default:create=false;
+		}
+		if(create){
+			dWindow=window.open('', '', 'width='+scrWidth+',height='+scrHeight+',left='+x+',top='+y);
+			dWindow.document.write(dHTML);		
+		}
+	}
+	
+	function createDocument(win){
+		var docTitle=win.document.getElementsByClassName(newDataClass)[0].value;
+		win.close();
+		dataObject[++dataCount]={fragments:[],id:dataCount,name:docTitle};
+		var contentList=document.getElementsByClassName('content_list')[0];
+		var dataList=contentList.innerHTML;
+		dataList=addDocToList(dataList,dataObject[dataCount],dataCount);
+		contentList.innerHTML =dataList;
+	}
+	
 	function getTitle(title){
 		var ref='</a>';
 		var repl='replace';
 		var protocol='http://';
-		if(title.includes(ref)){			
-			if(title.includes(repl) && !title.includes(protocol)){
+		if(title.indexOf(ref)!==-1){			
+			if(title.indexOf(repl)!==-1 && title.indexOf(protocol)<0){
 				var idx=title.indexOf(repl)+9;
 				var end=title.slice(idx);
 				title=title.substring(0,idx)+protocol+end;
@@ -56,8 +108,7 @@ window.FuncKit=(function(){
 		var h,id;
 		if(opacity==='1'){
 			h=100;
-			id = setInterval(frame, 1);
-			function frame() {
+			id = setInterval(function() {
 				if (h === 0) {
 					clearInterval(id);
 					element.innerHTML ='';
@@ -67,11 +118,10 @@ window.FuncKit=(function(){
 					element.style.fontSize=fontSizeFragment*h/100+'px';
 					element.style.opacity = h*0.01; 			
 				}
-			}
+			}, 1);			
 			}else{
 			h=0;
-			id = setInterval(frame, 1);
-			function frame() {
+			id = setInterval(function () {
 				if (h === 100) {
 					clearInterval(id);
 					} else {
@@ -79,7 +129,7 @@ window.FuncKit=(function(){
 					element.style.fontSize=fontSizeFragment*h/100+'px';
 					element.style.opacity = h*0.01; 
 				}
-			}
+			}, 1);			
 		} 
 	}
 	
@@ -143,7 +193,7 @@ window.FuncKit=(function(){
 				element.innerHTML =obj.data.content;
 				element.setAttribute('style', 'font-size:'+fontSizeFragment+
 				'px; margin:5px 0; border:solid 2px #B1C7D3; padding:5px; height:100%; opacity:1');
-				} 			
+			} 			
 			break;
 		}
 	}
@@ -151,6 +201,8 @@ window.FuncKit=(function(){
 	return {
 		getData:data,
 		hideText:hide,
-		getContext:createContext
+		getContext:createContext,
+		displayDialog:createDialog,
+		newDocument:createDocument
 	};
-})();
+})();		
