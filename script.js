@@ -1,13 +1,16 @@
 window.FuncKit=(function(){
 	var xhr = new XMLHttpRequest();
 	var url='http://localhost:3000/docs.svc';
-	var arrayParagrahps=[];
+	var arrayParagrahps=[];//[id:{data:{content:'',name:''},flag:false/true}]
 	var dataObject;
+	var tempDataObject=[];//tempDataObject[idx:{docId:docId,name:paragraphName,text:paragraphData}]
+	var tempClassPrefix='t_';
 	var dataCount=-1;
 	var emptyTitle='(No name)';
 	var fontSizeFragment=16;
 	var nameDoc='doc_name';
 	var newDataClass='data';
+	var currentDocId=-1;
 	//------------------------
 	function data(){
 		xhr.open('GET', url+'/getDocumentsList');
@@ -30,6 +33,8 @@ window.FuncKit=(function(){
 						headerButtons[k].setAttribute('onclick',
 						't=event.target||event.srcElement; FuncKit.displayDialog(t.id)');
 					}
+					currentDocId=0;
+					setCurrentDocTitle(currentDocId);
 				}
 			}
 		};
@@ -68,13 +73,40 @@ window.FuncKit=(function(){
 			'onclick="window.opener.FuncKit.newDocument(window)">'+
 			'</div></div></body></html>';			
 			break;
-			
+			case 'newPar':
+			scrWidth=400;
+			scrHeight=300;			
+			x -= scrWidth/2;
+			y -= scrHeight/2;			
+			dHTML='<!DOCTYPE html><html><head>'+
+			'<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">'+
+			'<title>Paragraph title</title></head><body><div>New paragraph<div>'+
+			'<div><input class="'+newDataClass+'" type="text"></div>'+
+			'<div>Paragraph text<div>'+
+			'<textarea style="height:'+(scrHeight-140)+'px; width:'+(scrWidth-20)+'px"'+
+			' class="'+newDataClass+'"></textarea></div><div><input type="button" value="Create"'+
+			'onclick="window.opener.FuncKit.newParagraph(window)">'+
+			'</div></div></body></html>';
+			break;
+			case 'save':
+			break;
 			default:create=false;
 		}
 		if(create){
 			dWindow=window.open('', '', 'width='+scrWidth+',height='+scrHeight+',left='+x+',top='+y);
 			dWindow.document.write(dHTML);		
 		}
+	}
+	
+	function createParagraph(win){
+		var fields=win.document.getElementsByClassName(newDataClass);
+		var paragraphName=fields[0].value;
+		var paragraphData=fields[1].value;
+		win.close();		
+		arrayParagrahps[tempClassPrefix+currentDocId+'_'+tempDataObject.length]=
+		{data:{content:paragraphData,name:paragraphName},flag:false};
+		tempDataObject.push({docId:currentDocId,name:paragraphName,text:paragraphData});
+		createContext(currentDocId);
 	}
 	
 	function createDocument(win){
@@ -85,6 +117,8 @@ window.FuncKit=(function(){
 		var dataList=contentList.innerHTML;
 		dataList=addDocToList(dataList,dataObject[dataCount],dataCount);
 		contentList.innerHTML =dataList;
+		currentDocId=dataCount;
+		setCurrentDocTitle(currentDocId);
 	}
 	
 	function getTitle(title){
@@ -133,18 +167,39 @@ window.FuncKit=(function(){
 		} 
 	}
 	
+	function setCurrentDocTitle(idDoc){
+		document.getElementsByClassName('doc_name')[0].innerHTML=dataObject[idDoc].name;
+	}
+	
 	function createContext(idDoc){
-		document.getElementsByClassName('doc_name')[0].innerHTML=dataObject[idDoc].name;					
+		currentDocId=idDoc;
+		setCurrentDocTitle(idDoc);					
 		//create context					
 		var fragments=dataObject[idDoc].fragments;
 		var fragmentsBlock='';
 		for(var k=0;k<fragments.length;k++){							
-			var idF=idDoc+'_'+k;			
-			fragmentsBlock+='<div id="'+idF+'a" class="paragraph"><span class="paragraphName">'+
-			getTitle(fragments[k].name)+'</span><span class="hide"><input class="'+idF+
-			'" type="button" value="&#8657;" onclick="FuncKit.hideText(this)"></span></div><div class="'+idF+'"></div>';
+			fragmentsBlock=addFragmentView(fragments[k].name,idDoc,k,fragmentsBlock);
 		}
-		document.getElementsByClassName('content_view')[0].innerHTML=fragmentsBlock;
+		fragmentsBlock=getTempFragmentsViev(idDoc,fragmentsBlock);
+		document.getElementsByClassName('content_view')[0].innerHTML=fragmentsBlock;		
+	}
+	
+	function addFragmentView(name,idDoc,idFragm,fragmentsBlock){
+		var idF=idDoc+'_'+idFragm;			
+		return fragmentsBlock+='<div id="'+idF+'a" class="paragraph"><span class="paragraphName">'+
+		getTitle(name)+'</span><span class="hide"><input class="'+idF+
+		'" type="button" value="&#8657;" onclick="FuncKit.hideText(this)"></span></div><div class="'+idF+'"></div>';
+	}
+	
+	function getTempFragmentsViev(idDoc,fragmentsBlock){
+		for(var k=0;k<tempDataObject.length;k++){							
+			if(tempDataObject[k].docId===idDoc){
+				fragmentsBlock=addFragmentView(tempDataObject[k].name,tempClassPrefix+idDoc,k,fragmentsBlock); 
+			}
+		}
+		
+		
+		return fragmentsBlock;
 	}
 	
 	function hide(field){
@@ -203,6 +258,7 @@ window.FuncKit=(function(){
 		hideText:hide,
 		getContext:createContext,
 		displayDialog:createDialog,
-		newDocument:createDocument
+		newDocument:createDocument,
+		newParagraph:createParagraph
 	};
 })();		
