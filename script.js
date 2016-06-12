@@ -2,7 +2,8 @@ window.FuncKit=(function(){
 	var xhr = new XMLHttpRequest();
 	var url='http://localhost:3000/docs.svc';
 	var arrayParagrahps=[];//[id:{data:{content:'',name:''},flag:false/true}]
-	var dataObject;
+	var dataObject;//dataObject{id:{fragments:[idx:{id:0,name:''}],id:0,name:''}}
+	//document{name:'',fragments:[idx:{content:'',name:''}]}
 	var tempDataObject=[];//tempDataObject[idx:{docId:docId,name:paragraphName,text:paragraphData}]
 	var tempClassPrefix='t_';
 	var dataCount=-1;
@@ -88,13 +89,59 @@ window.FuncKit=(function(){
 			'onclick="window.opener.FuncKit.newParagraph(window)">'+
 			'</div></div></body></html>';
 			break;
-			case 'save':
+			case 'save':			
+			create=false;
+			saveDocument();
+			//refresh view
+			data();
 			break;
 			default:create=false;
 		}
 		if(create){
 			dWindow=window.open('', '', 'width='+scrWidth+',height='+scrHeight+',left='+x+',top='+y);
 			dWindow.document.write(dHTML);		
+		}
+	}
+	
+	function saveDocument(){
+		//arrayParagrahps[id:{data:{content:'',name:''},flag:false/true}] => id='idDoc_idFr'
+		//currentDocId
+		//dataObject{id:{fragments:[idx:{id:0,name:''}],id:0,name:''}}			
+		//document{name:'',fragments:[idx:{content:'',name:''}]}
+		var doc=dataObject[currentDocId];
+		var size=[doc.fragments.length];
+		var tempDoc={name:doc.name,fragments:[]};
+		for(var i=0;i<size;i++){
+			var className=currentDocId+'_'+i;
+			if(!arrayParagrahps[className]){
+				xhr.open('GET', url+'/getDocumentFragment?docId='+currentDocId+'&fragmentId='+i,false);
+				xhr.onreadystatechange = function() {				
+					if (xhr.readyState == 4) {
+						if(xhr.status == 200) {
+							var newFragment=JSON.parse(xhr.responseText);
+							var objData={flag:false,data:newFragment};
+							arrayParagrahps[className]=objData;					
+						}
+					}
+				};
+				xhr.send(); 				
+			}
+			var data=arrayParagrahps[className].data;
+			tempDoc.fragments[i]={content:data.content,name:data.name};
+		}
+		//add new
+		//tempDataObject[idx:{docId:docId,name:paragraphName,text:paragraphData}]
+		for(var j=0;j<tempDataObject.length;j++){
+			var tempObj=tempDataObject[j];
+			if(tempObj.docId===currentDocId){
+				tempDoc.fragments.push({name:tempObj.name,content:tempObj.text});
+			}				
+		}
+		//save all
+		if(size!=tempDoc.fragments.length){
+			xhr.open('POST', url+'/saveDocument');
+			xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');					
+			xhr.send('document='+JSON.stringify(tempDoc));  
 		}
 	}
 	
